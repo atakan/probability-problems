@@ -1,0 +1,1 @@
+Running a routine again and again and averaging the results is a common occurrance. Maybe write a function/macro for it?
