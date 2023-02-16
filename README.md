@@ -2,3 +2,6 @@
 some probability problems
 
 1. Sim 6.2 on p. 106 of Choe
+
+# nahin-digital-dice
+Problems from Nahin's "Digital Dice"
