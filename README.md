@@ -5,3 +5,6 @@ some probability problems
 
 # nahin-digital-dice
 Problems from Nahin's "Digital Dice"
+
+# Kac-stoch-problem
+From Kac's "some stochastic problems in physics and mathematics"
