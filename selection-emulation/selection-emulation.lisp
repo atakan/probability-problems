@@ -18,7 +18,7 @@
     (list (nth n l) (remove-nth n l))))
 
 (defun random-move-one (l1 l2)
-  ;; removes a random element from l2 and conses it to (front of) l1. returns resulting (l1 l2)
+  ;; removes a random element from l2 and conses it to (the front of) l1. returns resulting (l1 l2)
   ;; if l2 is nil, just return (l1 l2)
   (let* ((ll2 (length l2))
 	 (n (random ll2)))
@@ -27,6 +27,21 @@
 	      (remove-nth n l2))
 	(list l1 l2))))
 
+
+(defun randomize-into (l1 l2)
+  ;; randomly conses the elements of l2 to (the front of) l1 and returns the result.
+  (if (null l2)
+      l1
+      (apply #'randomize-into (random-move-one l1 l2))))
+
+
 (defun randomize (l)
-  ;; randomizes the elements of the list l, and returns the result.
-  ;; this is shuffle and probably Knuth shuffle would have worked better :-D
+  ;; this is shuffle and probably a compact Knuth shuffle would have worked better :-D
+  (randomize-into nil l))
+
+
+(defun list-to-int (l)
+  ;; converts a list containing digits of a binary number in reverse order to integer
+  (if (= (length l) 1)
+      (car l)
+      (+ (car l) (* 2 (list-to-int (cdr l))))))
