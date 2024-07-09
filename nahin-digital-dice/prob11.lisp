@@ -8,12 +8,15 @@
 ;; count remaining votes, excluding those at the end
 ;; do this again and again and find probability to pass
 
+;; USAGE: e.g., (format t "~f" (missing-senators-problem 100 49 5 (round 1e7))
+
 (defun swap-senators (lst el1 el2)
   (let ((tmp (elt lst el1)))
     (setf (elt lst el1) (elt lst el2))
     (setf (elt lst el2) tmp)))
 
 (defun missing-senator-simulation (n-yea n-nay n-missing)
+  "given the number of yea-sayers, nay-sayers and missing senators, this routine simulates the outcome of one voting process."
   (let ((senators (concatenate 'vector
 			       (make-array n-yea :initial-element 1)
 			       (make-array n-nay :initial-element 0))))
@@ -30,3 +33,7 @@
       (when (missing-senator-simulation (- n-senators n-against) n-against n-missing)
 	(incf n-fail)))
     (/ n-fail n-simulation)))
+
+(defun missing-senators-problem-take2 (n-senators n-against n-missing n-simulation)
+  "in this alternative approach, we create a sample once; shuffle it repeatedly and check the first ... votes for the result. It may be faster, it may be slower; we need to check."
+  )
