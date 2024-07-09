@@ -45,3 +45,24 @@
   (if (= (length l) 1)
       (car l)
       (+ (car l) (* 2 (list-to-int (cdr l))))))
+
+
+;;; The library we will use for plotting uses lists, but I will use vectors to store simulation results
+
+(defvar *N-outcomes* (expt 2 12))
+(defvar *outcomes* (make-array *N-outcomes* :initial-element 0
+					    :element-type 'integer))
+(defvar *ordered* '(1 1 1 1 1 1 0 0 0 0 0 0))
+
+(defun simulate (N-blocks N-tries)
+  ;; N-blocks will be the total number of blocks (half black, half white)
+  ;; in the original game this is 12.
+  (let* ((N-outcomes (expt 2 N-blocks))
+ 	 (outcomes (make-array N-outcomes
+			       :initial-element 0 element-type 'integer))
+	 (ordered (loop for x from 0 below N-blocks
+	       collect (if (< x (/ N-blocks 2))
+			   1
+			   0))))
+		   
+			      
