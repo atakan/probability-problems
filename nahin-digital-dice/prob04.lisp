@@ -16,3 +16,13 @@
       (push (cons 'h a) result)
       (push (cons 't a) result))))
 
+(defun zeros-like (a)
+  "given a list or array, return an array consisting of zeros of the same length"
+  (let ((l (length a)))
+    (make-array l :initial-element 0)))
+
+(defun outcome-probabilities (np)
+  "given the number of players, gives probabilities for each outcome.
+   right now, this is done by hand; it is a place holder, it is of course possible to calculate this, by using the routines above.
+   in fact it has to be a lot more complicated than this, since for np>=5, more than 1 person may acquire coins and less than np-1 people may lose coins. So, maybe something like this? ( (1/4 (0 0 0)) (1/4 (2 -1 -1)) (1/4 (-1 2 -1)) (1/4 (-1 -1 2)). Yeah this looks good."
+  
