@@ -3,8 +3,6 @@
 (defvar *changes* '((1/6) (-1 1 0)
 		    (1/6) (-1 0 1)))
 
-(defun make-zeros-list (n)
-  (loop for i from 1 to n collect 0))
 
 #|
 (defun changes-tower-prob (n)
@@ -22,18 +20,34 @@
   "create all possibilities with one +1, one -1 and rest 0s. Turn it into a list with probabilities and return.
    this is essentially all permutations of (1 -1 0 ... 0).
    the probabilities are all equal, this assumes a symmetry. if the symmetry does not exist, obviously a more complicated routine is required."
-  (let* ((change-list
-	   (let ((seed-list (cons 1 (cons -1 (make-zeros-list (- n 2))))))
-	     (unique-permutations seed-list)))
+  (let* ((change-list (unique-permutations
+		       (list* 1 -1 (make-list (- n 2) :initial-element 0))))
 	 (ll (length change-list)))
-    (mapcar #'list
-	    (loop for i from 1 to ll collect (/ 1 ll))
-	    (change-list))))
-    
-  
+    (mapcar #'(lambda (x) (list (/ 1 ll) x)) change-list)))
+
+(defun results-from-change (w change-f)
+  "given a state w, calculate all possible results from changes, with probabilities. identify duplicates and combine them, while adding their probabilities.
+  this also requires/accepts a function to calculate the list of changes"
+  (let* ((n (length w))
+	 (change-list (funcall change-f n)))
+	 (setf raw-results (loop for (a b) in change-list
+	       collect (list a (mapcar #'+ w b)))))
+#|
+(defun deneme (w change-f)
+  (progn
+    (format t "~a" w) 
+    (funcall change-f 3)))
+
+(defun deneme2 (w change-f)
+  (let ((n (length w)))
+    (let ((change-list (funcall change-f n)))
+      (loop for (a b) in change-list
+	    collect (list a (mapcar #'+ w b))))))
+|#
 
 (defun permutations (list)
-  "Return a list of all permutations of the input list."
+  "Return a list of all permutations of the input list.
+   Written by ChatGPT."
   (labels ((remove-nth (n list)
              (append (subseq list 0 n) (subseq list (1+ n))))
            (permute (list)
