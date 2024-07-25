@@ -12,7 +12,7 @@
   (let ((my-zeroes (make-zeros-list n))
 	(zeros-with-ones nil))
     (dotimes (i n zeros-with-ones)
-      ;;; instead of the following, I should check if the current element is 0 and on ly then subst and push. At least for the next step.
+      ;;; instead of the following, I should check if the current element is 0 and only then subst and push. At least for the next step.
       (push (substitute 1 0 my-zeroes :start i :count 1) zeros-with-ones))))
 |#    
 
@@ -26,26 +26,34 @@
     (mapcar #'(lambda (x) (list (/ 1 ll) x)) change-list)))
 
 (defun results-from-change (w change-f)
-  "given a state w, calculate all possible results from changes, with probabilities. identify duplicates and combine them, while adding their probabilities.
-  this also requires/accepts a function to calculate the list of changes"
+  "given a state w, calculate all possible results from changes, with probabilities. identify duplicates and combine them (by sorting), while adding their probabilities.
+  this also requires/accepts a function to calculate the list of changes.
+  example usage:
+  CL-USER> (results-from-change '(4 2 2) #'changes-tower-prob)
+"
   (let* ((n (length w))
 	 (change-list (funcall change-f n))
 	 (raw-results (loop for (a b) in change-list
 			    collect (list a (mapcar #'+ w b)))))
-    (format t "~a" raw-results)))
-#|
-(defun deneme (w change-f)
-  (progn
-    (format t "~a" w) 
-    (funcall change-f 3)))
+    (good-f raw-results)))
 
-(defun deneme2 (w change-f)
-  (let ((n (length w)))
-    (let ((change-list (funcall change-f n)))
-      (loop for (a b) in change-list
-	    collect (list a (mapcar #'+ w b))))))
-|#
-
+(defun good-f (rl)
+  "this function takes a list, which consists of lists with first element a fraction (probability) and second element a list (some state). it sorts the second element, then combines terms with identical states into a single element with sum of probabilities and the state."
+  (let ((states (make-hash-table :test 'equal))
+	(result nil))
+    (loop for ele in rl
+	  do (setf (second ele) (sort (second ele) #'>))
+	     (if (gethash (second ele) states)
+		 (incf (gethash (second ele) states) (first ele))
+		 (setf (gethash (second ele) states) (first ele))))
+    ;(maphash #'(lambda (k v) (format t "~a => ~a~%" k v)) states)
+    (maphash #'(lambda (k v) (push (list v k) result)) states)
+    (return-from good-f result)))
+						       
+;;;;;;
+;;;; utility functions (more general purpose)
+;;;;;;
+    
 (defun permutations (list)
   "Return a list of all permutations of the input list.
    Written by ChatGPT."
