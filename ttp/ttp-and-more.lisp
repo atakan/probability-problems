@@ -29,9 +29,10 @@
   "given a state w, calculate all possible results from changes, with probabilities. identify duplicates and combine them, while adding their probabilities.
   this also requires/accepts a function to calculate the list of changes"
   (let* ((n (length w))
-	 (change-list (funcall change-f n)))
-	 (setf raw-results (loop for (a b) in change-list
-	       collect (list a (mapcar #'+ w b)))))
+	 (change-list (funcall change-f n))
+	 (raw-results (loop for (a b) in change-list
+			    collect (list a (mapcar #'+ w b)))))
+    (format t "~a" raw-results)))
 #|
 (defun deneme (w change-f)
   (progn
