@@ -20,9 +20,16 @@
 
 (defun changes-tower-prob (n)
   "create all possibilities with one +1, one -1 and rest 0s. Turn it into a list with probabilities and return.
-   this is essentially all permutations of (1 -1 0 ... 0)."
-  (let ((seed-list (cons 1 (cons -1 (make-zeros-list (- n 2))))))
-    (unique-permutations seed-list)))
+   this is essentially all permutations of (1 -1 0 ... 0).
+   the probabilities are all equal, this assumes a symmetry. if the symmetry does not exist, obviously a more complicated routine is required."
+  (let* ((change-list
+	   (let ((seed-list (cons 1 (cons -1 (make-zeros-list (- n 2))))))
+	     (unique-permutations seed-list)))
+	 (ll (length change-list)))
+    (mapcar #'list
+	    (loop for i from 1 to ll collect (/ 1 ll))
+	    (change-list))))
+    
   
 
 (defun permutations (list)
