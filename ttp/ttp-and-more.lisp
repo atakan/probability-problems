@@ -53,7 +53,51 @@
 ;;;;;;
 ;;;; utility functions (more general purpose)
 ;;;;;;
-    
+
+(defun knuth-H (n m)
+  "Knuth's algorithm TAOCP v4a, p392, for partitions of n into m parts."
+  (if (or (< m 2) (< n m))
+      (return-from knuth-H (format t "for partitions, we need n >= m>= 2")))
+  (let ((result nil)
+	(a (make-list (1+ m) :initial-element 1))
+	(j 0) (s 0) (x 0))
+    (setf (first a) (1+ (- n m)))
+    (setf (car (last a)) -1)
+    (tagbody
+     H2
+       (format t "~a~%" a)
+       (push (copy-list a) result)
+       (if (>= (second a) (- (first a) 1))
+	   (go H4))
+     H3
+       (decf (first a))
+       (incf (second a))
+       (go H2)
+     H4
+       (format t "bb ~%")
+       (setf j 3)
+       (format t "cc ~%")
+       (setf s (+ (first a) (second a) -1))
+       (format t "dd ~%")
+       (loop
+	 while (>= (nth (1+ j) a) (- (first a) 1))
+	 do (setf s (+ s (nth (1+ j) a)))
+	    (incf j))
+     H5
+       (format t "aa ~a" j)
+       (if (> j m) (go END-H))
+       (setf x (1+ (nth (1+ j) a)))
+       (setf (nth (1+ j) a) x)
+       (decf j)
+     H6
+       (loop
+	 while (> j 1)
+	 do (setf (nth (1+ j) a) x s (- s x) j (- j 1)))
+       (setf (first a) s)
+       (go H2)
+     END-H)
+    (return-from knuth-H result)))
+	       	   
 (defun permutations (list)
   "Return a list of all permutations of the input list.
    Written by ChatGPT."
