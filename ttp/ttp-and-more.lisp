@@ -65,8 +65,7 @@
     (setf (car (last a)) -1)
     (tagbody
      H2
-       (format t "~a~%" a)
-       (push (copy-list a) result)
+       (push (butlast (copy-list a)) result)
        (if (>= (second a) (- (first a) 1))
 	   (go H4))
      H3
@@ -74,29 +73,26 @@
        (incf (second a))
        (go H2)
      H4
-       (format t "bb ~%")
        (setf j 3)
-       (format t "cc ~%")
        (setf s (+ (first a) (second a) -1))
-       (format t "dd ~%")
        (loop
-	 while (>= (nth (1+ j) a) (- (first a) 1))
-	 do (setf s (+ s (nth (1+ j) a)))
+	 while (>= (nth (1- j) a) (- (first a) 1))
+	 do
+	    (setf s (+ s (nth (1- j) a)))
 	    (incf j))
      H5
-       (format t "aa ~a" j)
        (if (> j m) (go END-H))
-       (setf x (1+ (nth (1+ j) a)))
-       (setf (nth (1+ j) a) x)
+       (setf x (1+ (nth (1- j) a)))
+       (setf (nth (1- j) a) x)
        (decf j)
      H6
        (loop
 	 while (> j 1)
-	 do (setf (nth (1+ j) a) x s (- s x) j (- j 1)))
+	 do (setf (nth (1- j) a) x s (- s x) j (1- j)))
        (setf (first a) s)
        (go H2)
      END-H)
-    (return-from knuth-H result)))
+    (return-from knuth-H (nreverse result))))
 	       	   
 (defun permutations (list)
   "Return a list of all permutations of the input list.
