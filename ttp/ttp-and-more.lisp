@@ -1,8 +1,16 @@
+;;; the plan/algorithm for ttp:
+;;; Given a state (n, l, m), calculate the number of rings(?) N=n+l+m. Find all its 3 integer partitions by (knuth-h N 3). For each of these partitions, find the possible results with probabilities, filter out/discard the results with empty towers; use the remaining results to setup the matrix. Note: the diagonal elements of the matrix are all -1, the constant terms are all 1. Solve this linear system and get your answer.
+
 (defparameter *init-cond* '(3 2 2))
 
 (defvar *changes* '((1/6) (-1 1 0)
 		    (1/6) (-1 0 1)))
 
+(defmacro 0nth (i l)
+  `(nth ,(1+ i) ,l))
+
+(defmacro a1 ()
+  '(first a))
 
 #|
 (defun changes-tower-prob (n)
@@ -61,12 +69,12 @@
   (let ((result nil)
 	(a (make-list (1+ m) :initial-element 1))
 	(j 0) (s 0) (x 0))
-    (setf (first a) (1+ (- n m)))
+    (setf (a1) (1+ (- n m)))
     (setf (car (last a)) -1)
     (tagbody
      H2
        (push (butlast (copy-list a)) result)
-       (if (>= (second a) (- (first a) 1))
+       (if (>= (second a) (- (a1) 1))
 	   (go H4))
      H3
        (decf (first a))
@@ -74,9 +82,9 @@
        (go H2)
      H4
        (setf j 3)
-       (setf s (+ (first a) (second a) -1))
+       (setf s (+ (a1) (second a) -1))
        (loop
-	 while (>= (nth (1- j) a) (- (first a) 1))
+	 while (>= (nth (1- j) a) (- (a1) 1))
 	 do
 	    (setf s (+ s (nth (1- j) a)))
 	    (incf j))
