@@ -1,5 +1,27 @@
 ;;; the plan/algorithm for ttp:
-;;; Given a state (n, l, m), calculate the number of rings(?) N=n+l+m. Find all its 3 integer partitions by (knuth-h N 3). For each of these partitions, find the possible results with probabilities, filter out/discard the results with empty towers; use the remaining results to setup the matrix. Note: the diagonal elements of the matrix are all -1, the constant terms are all 1. Solve this linear system and get your answer.
+;;; Given a state (n, l, m), calculate the number of rings(?, guards?) N=n+l+m. Find all its 3 integer partitions by (knuth-h N 3). For each of these partitions, find the possible results with probabilities, filter out/discard the results with empty towers; use the remaining results to setup the matrix. Note: the diagonal elements of the matrix are all -1, the constant terms are all 1. Solve this linear system and get your answer.
+
+(defun average-length-ntp (state)
+  "given a state blah blah (see above)
+   I try to make this a bit more general, so ntp (n-tower problem)."
+  (let* ((n-towers (length state))   
+ 	 (n-guards (apply #'+ state))
+	 (interesting-states (knuth-h n-guards n-towers))
+	 (row-length (1+ (length interesting-states)))
+	 (rows nil))
+    (loop for st in interesting-states
+	  do (let ((row (make-list row-length :initial-element 0)))
+	       (format t "aa ~a ~%" st)
+	       (setf (car (last row)) 1)
+	       (setf (elt row (position st interesting-states)) -1)
+	       (format t "bb ~a ~%" st)
+	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
+		     do (incf (elt row (position res interesting-states)) prob))
+	       (push row rows)))
+    (reverse rows)
+    (first rows)
+	  ))
+	   
 
 (defparameter *init-cond* '(3 2 2))
 
@@ -56,7 +78,8 @@
 		 (setf (gethash (second ele) states) (first ele))))
     ;(maphash #'(lambda (k v) (format t "~a => ~a~%" k v)) states)
     (maphash #'(lambda (k v) (push (list v k) result)) states)
-    (return-from good-f result)))
+    (remove-if #'(lambda (x) (find 0 (second x))) result)))
+;;;;    (return-from good-f result)))
 						       
 ;;;;;;
 ;;;; utility functions (more general purpose)
