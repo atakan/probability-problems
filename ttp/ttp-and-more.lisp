@@ -11,15 +11,12 @@
 	 (rows nil))
     (loop for st in interesting-states
 	  do (let ((row (make-list row-length :initial-element 0)))
-	       (format t "aa ~a ~%" st)
 	       (setf (car (last row)) 1)
 	       (setf (elt row (position st interesting-states)) -1)
-	       (format t "bb ~a ~%" st)
 	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
-		     do (incf (elt row (position res interesting-states)) prob))
+		     do (incf (elt row (position res interesting-states :test #'equal)) prob))
 	       (push row rows)))
-    (reverse rows)
-    (first rows)
+    (solve-equations rows)
 	  ))
 	   
 
@@ -160,3 +157,36 @@
                          (setf (gethash perm seen) t)
                          t))
                      result))))
+
+
+(defun solve-equations (rows &aux solution)
+  "
+  Purpose:	Solve linear equations.
+  Arguments:	Rows, in the following form:
+		((c11 c12 c13 c1)
+		 (c21 c22 c23 c2)
+		 (c31 c32 c33 c3))
+		where
+		  c11 x + c12 y + c13 z = c1
+		  c21 x + c22 y + c23 z = c2
+		  c31 x + c32 y + c33 z = c3
+  Returns:	(x y z)
+  "
+  (setf rows (mapcar #'(lambda (e) (append e nil)) rows))
+  (dotimes (n (length rows))
+    (setf (nth n rows)
+	  (scale-row (/ (float (nth n (nth n rows)))) (nth n rows)))
+    (dotimes (m (length rows))
+      (unless (= m n)
+	(setf (nth m rows)
+	      (add-two-rows (nth m rows)
+			    (scale-row (- (nth n (nth m rows)))
+				       (nth n rows)))))))
+  (setf solution (apply #'append (mapcar #'last rows)))
+  solution)
+
+;;;; AUXILIARIES
+
+(defun add-two-rows (r1 r2) (mapcar #'+ r1 r2))
+
+(defun scale-row (c r) (mapcar #'(lambda (e) (* c e)) r))
