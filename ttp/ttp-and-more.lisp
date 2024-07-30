@@ -16,7 +16,7 @@
 	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
 		     do (incf (elt row (position res interesting-states :test #'equal)) prob))
 	       (push row rows)))
-    (solve-equations rows)
+    (print rows)
 	  ))
 	   
 
