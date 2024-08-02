@@ -158,35 +158,37 @@
                          t))
                      result))))
 
+;;;; Solving linear system by Gaussian elimination (a.k.a. Gauss-Jordan?)
+;;;; Taken from https://rosettacode.org/wiki/Gaussian_elimination#Common_Lisp
+;;;; Note: it also has LU decomposition https://rosettacode.org/wiki/LU_decomposition#Common_Lisp
+;;;; this code is licensed under GFDL 1.3
 
-(defun solve-equations (rows &aux solution)
-  "
-  Purpose:	Solve linear equations.
-  Arguments:	Rows, in the following form:
-		((c11 c12 c13 c1)
-		 (c21 c22 c23 c2)
-		 (c31 c32 c33 c3))
-		where
-		  c11 x + c12 y + c13 z = c1
-		  c21 x + c22 y + c23 z = c2
-		  c31 x + c32 y + c33 z = c3
-  Returns:	(x y z)
-  "
-  (setf rows (mapcar #'(lambda (e) (append e nil)) rows))
-  (dotimes (n (length rows))
-    (setf (nth n rows)
-	  (scale-row (/ (float (nth n (nth n rows)))) (nth n rows)))
-    (dotimes (m (length rows))
-      (unless (= m n)
-	(setf (nth m rows)
-	      (add-two-rows (nth m rows)
-			    (scale-row (- (nth n (nth m rows)))
-				       (nth n rows)))))))
-  (setf solution (apply #'append (mapcar #'last rows)))
-  solution)
+(defmacro mapcar-1 (fn n list)
+ "Maps a function of two parameters where the first one is fixed, over a list"
+  `(mapcar #'(lambda (l) (funcall ,fn ,n l)) ,list) )
 
-;;;; AUXILIARIES
+(defun gauss (m)
+  (labels 
+    ((redc (m) ; Reduce to triangular form
+       (if (null (cdr m))
+         m
+        (cons (car m) (mapcar-1 #'cons 0 (redc (mapcar #'cdr (mapcar #'(lambda (r) (mapcar #'- (mapcar-1 #'* (caar m) r) 
+                                                                                            (mapcar-1 #'* (car r) (car m)))) (cdr m)))))) ))
+     (rev (m) ; Reverse each row except the last element
+       (reverse (mapcar #'(lambda (r) (append (reverse (butlast r)) (last r))) m)) ))
+    (catch 'result
+      (let ((m1 (redc (rev (redc m)))))
+        (reverse (mapcar #'(lambda (r) (let ((pivot (find-if-not #'zerop r))) (if pivot (/ (car (last r)) pivot) (throw 'result 'singular)))) m1)) ))))
 
-(defun add-two-rows (r1 r2) (mapcar #'+ r1 r2))
+(defparameter ex-mat '((  0   0   1/3 1/3 -2/3 1)
+		       (  0  1/3  1/3  -1  1/3 1)
+		       (  0  1/6 -5/6 1/6  1/6 1)
+		       (1/6 -5/6  1/6 1/6    0 1)
+		       ( -1  1/3    0   0    0 1)))
 
-(defun scale-row (c r) (mapcar #'(lambda (e) (* c e)) r))
+(defparameter ex-mat2 '((1 0 0  0  0   0   -1/100)
+			(1  63/100  39/100   25/100   16/100      1/10 61/100)
+			(1 126/100 158/100  198/100  249/100   313/100 91/100)
+			(1 188/100 355/100  670/100 1262/100  2380/100 99/100)
+			(1 251/100 632/100 1588/100 3990/100 10028/100   6/10)
+			(1 314/100 987/100 3101/100 9741/100 30602/100  2/100)))
