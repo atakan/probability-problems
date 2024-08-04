@@ -11,14 +11,13 @@
 	 (rows nil))
     (loop for st in interesting-states
 	  do (let ((row (make-list row-length :initial-element 0)))
-	       (setf (car (last row)) 1)
+	       (setf (car (last row)) 1) ; this already produces augmented matrix
 	       (setf (elt row (position st interesting-states)) -1)
 	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
 		     do (incf (elt row (position res interesting-states :test #'equal)) prob))
 	       (push row rows)))
-    (print rows)
+    (gauss-jordan-elimination-augmented rows)
 	  ))
-	   
 
 (defparameter *init-cond* '(3 2 2))
 
@@ -192,3 +191,129 @@
 			(1 188/100 355/100  670/100 1262/100  2380/100 99/100)
 			(1 251/100 632/100 1588/100 3990/100 10028/100   6/10)
 			(1 314/100 987/100 3101/100 9741/100 30602/100  2/100)))
+
+(defun solve-equations (rows &aux solution)
+  "
+  Purpose:	Solve linear equations.
+  Arguments:	Rows, in the following form:
+		((c11 c12 c13 c1)
+		 (c21 c22 c23 c2)
+		 (c31 c32 c33 c3))
+		where
+		  c11 x + c12 y + c13 z = c1
+		  c21 x + c22 y + c23 z = c2
+		  c31 x + c32 y + c33 z = c3
+  Returns:	(x y z)
+  "
+  (setf rows (mapcar #'(lambda (e) (append e nil)) rows))
+  (dotimes (n (length rows))
+    (setf (nth n rows)
+	  (scale-row (/ (float (nth n (nth n rows)))) (nth n rows)))
+    (dotimes (m (length rows))
+      (unless (= m n)
+	(setf (nth m rows)
+	      (add-two-rows (nth m rows)
+			    (scale-row (- (nth n (nth m rows)))
+				       (nth n rows)))))))
+  (setf solution (apply #'append (mapcar #'last rows)))
+  solution)
+
+;;;; AUXILIARIES
+
+(defun add-two-rows (r1 r2) (mapcar #'+ r1 r2))
+
+(defun scale-row (c r) (mapcar #'(lambda (e) (* c e)) r))
+
+
+;;;;the following is written by chatgpt
+
+(defun gauss-jordan-elimination (A b)
+  (let* ((n (length A))
+         (augmented-matrix (mapcar #'copy-list A))
+         (solution (copy-list b)))
+    
+    ;; Augment the matrix A with the vector b
+    (dotimes (i n)
+      (setf (nth i (nth i augmented-matrix)) (append (nth i augmented-matrix) (list (nth i solution)))))
+
+    (print augmented-matrix)
+    ;; Perform Gauss-Jordan elimination
+    (dotimes (i n)
+      
+      ;; Partial pivoting
+      (let ((max-row i))
+        (dotimes (k (- n i 1))
+          (when (> (abs (nth i (nth (+ i k 1) augmented-matrix)))
+                   (abs (nth i (nth max-row augmented-matrix))))
+            (setf max-row (+ i k 1))))
+        ;; Swap rows if necessary
+        (when (/= i max-row)
+          (rotatef (nth i augmented-matrix) (nth max-row augmented-matrix))))
+
+      ;; Normalize the pivot row
+      (let ((pivot (nth i (nth i augmented-matrix))))
+        (setf (nth i augmented-matrix)
+              (mapcar (lambda (x) (/ x pivot)) (nth i augmented-matrix))))
+
+      ;; Eliminate the other rows
+      (dotimes (j n)
+        (unless (= i j)
+          (let ((factor (nth i (nth j augmented-matrix))))
+            (setf (nth j augmented-matrix)
+                  (mapcar* (lambda (x y) (- x (* factor y)))
+                           (nth j augmented-matrix)
+                           (nth i augmented-matrix)))))))
+
+    ;; Extract the solution from the augmented matrix
+    (mapcar #'(lambda (row) (nth n row)) augmented-matrix)))
+
+;; Example usage
+#|
+(let* ((A '((2.0 1.0 -1.0)
+            (-3.0 -1.0 2.0)
+            (-2.0 1.0 2.0)))
+       (b '(8.0 -11.0 -3.0))
+       (solution (gauss-jordan-elimination A b)))
+  (print solution))
+|#
+
+(defun gauss-jordan-elimination-augmented (augmented-matrix)
+  (let* ((n (1- (length (car augmented-matrix))))) ; n is the number of columns minus 1
+    ;; Perform Gauss-Jordan elimination
+    (dotimes (i n)
+      
+      ;; Partial pivoting
+      (let ((max-row i))
+        (dotimes (k (- (length augmented-matrix) i 1))
+          (when (> (abs (nth i (nth (+ i k 1) augmented-matrix)))
+                   (abs (nth i (nth max-row augmented-matrix))))
+            (setf max-row (+ i k 1))))
+        ;; Swap rows if necessary
+        (when (/= i max-row)
+          (rotatef (nth i augmented-matrix) (nth max-row augmented-matrix))))
+
+      ;; Normalize the pivot row
+      (let ((pivot (nth i (nth i augmented-matrix))))
+        (setf (nth i augmented-matrix)
+              (mapcar (lambda (x) (/ x pivot)) (nth i augmented-matrix))))
+
+      ;; Eliminate the other rows
+      (dotimes (j (length augmented-matrix))
+        (unless (= i j)
+          (let ((factor (nth i (nth j augmented-matrix))))
+            (setf (nth j augmented-matrix)
+                  (mapcar #'(lambda (x y) (- x (* factor y)))
+                          (nth j augmented-matrix)
+                          (nth i augmented-matrix)))))))
+
+    ;; Extract the solution from the augmented matrix (last column)
+    (mapcar (lambda (row) (nth n row)) augmented-matrix)))
+
+;; Example usage
+#|
+(let* ((augmented-matrix '((2.0 1.0 -1.0 8.0)
+                           (-3.0 -1.0 2.0 -11.0)
+                           (-2.0 1.0 2.0 -3.0)))
+       (solution (gauss-jordan-elimination-augmented augmented-matrix)))
+  (print solution))
+|#
