@@ -11,14 +11,13 @@
 	 (rows nil))
     (loop for st in interesting-states
 	  do (let ((row (make-list row-length :initial-element 0)))
-	       (setf (car (last row)) 1)
+	       (setf (car (last row)) 1) ; this already produces augmented matrix
 	       (setf (elt row (position st interesting-states)) -1)
 	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
 		     do (incf (elt row (position res interesting-states :test #'equal)) prob))
 	       (push row rows)))
-    (print rows)
+    (gauss-jordan-elimination-augmented rows)
 	  ))
-	   
 
 (defparameter *init-cond* '(3 2 2))
 
@@ -190,3 +189,97 @@
 (defun add-two-rows (r1 r2) (mapcar #'+ r1 r2))
 
 (defun scale-row (c r) (mapcar #'(lambda (e) (* c e)) r))
+
+
+;;;;the following is written by chatgpt
+
+(defun gauss-jordan-elimination (A b)
+  (let* ((n (length A))
+         (augmented-matrix (mapcar #'copy-list A))
+         (solution (copy-list b)))
+    
+    ;; Augment the matrix A with the vector b
+    (dotimes (i n)
+      (setf (nth i (nth i augmented-matrix)) (append (nth i augmented-matrix) (list (nth i solution)))))
+
+    (print augmented-matrix)
+    ;; Perform Gauss-Jordan elimination
+    (dotimes (i n)
+      
+      ;; Partial pivoting
+      (let ((max-row i))
+        (dotimes (k (- n i 1))
+          (when (> (abs (nth i (nth (+ i k 1) augmented-matrix)))
+                   (abs (nth i (nth max-row augmented-matrix))))
+            (setf max-row (+ i k 1))))
+        ;; Swap rows if necessary
+        (when (/= i max-row)
+          (rotatef (nth i augmented-matrix) (nth max-row augmented-matrix))))
+
+      ;; Normalize the pivot row
+      (let ((pivot (nth i (nth i augmented-matrix))))
+        (setf (nth i augmented-matrix)
+              (mapcar (lambda (x) (/ x pivot)) (nth i augmented-matrix))))
+
+      ;; Eliminate the other rows
+      (dotimes (j n)
+        (unless (= i j)
+          (let ((factor (nth i (nth j augmented-matrix))))
+            (setf (nth j augmented-matrix)
+                  (mapcar* (lambda (x y) (- x (* factor y)))
+                           (nth j augmented-matrix)
+                           (nth i augmented-matrix)))))))
+
+    ;; Extract the solution from the augmented matrix
+    (mapcar #'(lambda (row) (nth n row)) augmented-matrix)))
+
+;; Example usage
+#|
+(let* ((A '((2.0 1.0 -1.0)
+            (-3.0 -1.0 2.0)
+            (-2.0 1.0 2.0)))
+       (b '(8.0 -11.0 -3.0))
+       (solution (gauss-jordan-elimination A b)))
+  (print solution))
+|#
+
+(defun gauss-jordan-elimination-augmented (augmented-matrix)
+  (let* ((n (1- (length (car augmented-matrix))))) ; n is the number of columns minus 1
+    ;; Perform Gauss-Jordan elimination
+    (dotimes (i n)
+      
+      ;; Partial pivoting
+      (let ((max-row i))
+        (dotimes (k (- (length augmented-matrix) i 1))
+          (when (> (abs (nth i (nth (+ i k 1) augmented-matrix)))
+                   (abs (nth i (nth max-row augmented-matrix))))
+            (setf max-row (+ i k 1))))
+        ;; Swap rows if necessary
+        (when (/= i max-row)
+          (rotatef (nth i augmented-matrix) (nth max-row augmented-matrix))))
+
+      ;; Normalize the pivot row
+      (let ((pivot (nth i (nth i augmented-matrix))))
+        (setf (nth i augmented-matrix)
+              (mapcar (lambda (x) (/ x pivot)) (nth i augmented-matrix))))
+
+      ;; Eliminate the other rows
+      (dotimes (j (length augmented-matrix))
+        (unless (= i j)
+          (let ((factor (nth i (nth j augmented-matrix))))
+            (setf (nth j augmented-matrix)
+                  (mapcar #'(lambda (x y) (- x (* factor y)))
+                          (nth j augmented-matrix)
+                          (nth i augmented-matrix)))))))
+
+    ;; Extract the solution from the augmented matrix (last column)
+    (mapcar (lambda (row) (nth n row)) augmented-matrix)))
+
+;; Example usage
+#|
+(let* ((augmented-matrix '((2.0 1.0 -1.0 8.0)
+                           (-3.0 -1.0 2.0 -11.0)
+                           (-2.0 1.0 2.0 -3.0)))
+       (solution (gauss-jordan-elimination-augmented augmented-matrix)))
+  (print solution))
+|#
