@@ -20,13 +20,24 @@
 (defun range (n)
   (loop for i from 1 to n
 	collect i))
-
+#|
 (defun nnth (n A)
   (nth (1- n) A))
+|#
+
+(defmacro nnth (n A)
+  `(nth (1- ,n) ,A))
 
 (defun m-el (A n m &key (pv (range (length A))))
   "return the matrix element at (pv n)th row and mth colum. pv is the pivot matrix and shows the indirect index for rows. Everything is 1-indexed, i.e. A11 is the upper left element."
   (nnth m (nnth (nnth n pv) A)))
+
+;;;; XXX the following is not working as I hoped
+(defmacro ttt (A n m &key pv)
+  `,(unless pv
+    `(setf ,pv (range  (length ,A))))
+  `(nnth ,m (nnth (nnth ,n ,pv) ,A)))
+		 
 
 (defun augment (A b)
   "Augments a matrix A and (column) vector b"
@@ -34,6 +45,7 @@
 	for i from 0 to (1- (length A))
 	collect (append row (list (nth i b)))))
 
+#|
 (defun pivot (A pv n)
   "Given a matrix A, (1) find the largest term in the square sub-matrix A-sub,
    where A-sub is determined by starting from nth row and nth column of A, and getting a square matrix as big as possible. 
@@ -42,3 +54,6 @@
    Columns are pivoted by swapping elements in each row, rows are pivoted by swapping elements in pv (the pivot vector).
    Both these operations are done in place, i.e., destructively.
    The function returns multiple values of A and pv."
+)
+|#
+  
