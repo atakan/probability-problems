@@ -8,18 +8,25 @@
 
 
 ;;; the following parameters are defined for quicktesting
+(defun range (n)
+  (loop for i from 1 to n
+	collect i))
+
 (defparameter *A* '((1 1/2 1/3 1/4)
 		    (2 2/2 2/3 2/4)
 		    (3 3/2 3/3 3/4)
 		    (4 4/2 4/3 4/4)))
 
+(defun qrm (&key (n 4) (max 1200))
+  (loop for j from 1 to n
+	collect (loop for i from 1 to n
+		      collect (random max))))
+
 (defparameter *b* '(11 12 13 14))
 
 (defparameter *pv* (range (length *A*)))
 
-(defun range (n)
-  (loop for i from 1 to n
-	collect i))
+
 #|
 (defun nnth (n A)
   (nth (1- n) A))
@@ -49,11 +56,48 @@
 (defun pivot (A pv n)
   "Given a matrix A, (1) find the largest term in the square sub-matrix A-sub,
    where A-sub is determined by starting from nth row and nth column of A, and getting a square matrix as big as possible. 
-   It is assumed that the number of rows of A is <= number of columns of A.
-   (2) pivot rows and columns of A (not A-sub) so that this largest element is in the (1,1) point of A-sub.
+   It is assumed that the number of rows of A is <= number of columns of A.            (2) pivot rows and columns of A (not A-sub) so that this largest element is in the (1,1) point of A-sub.
    Columns are pivoted by swapping elements in each row, rows are pivoted by swapping elements in pv (the pivot vector).
    Both these operations are done in place, i.e., destructively.
    The function returns multiple values of A and pv."
 )
 |#
-  
+
+(defun max-in-column-below (A pv i)
+  "Given a matrix A, find j>=i where jth row has the maximum in ith column.
+   This is what is needed for pivoting and this routine is slightly more efficient than the more general one given below."
+  (let ((n (length A))
+	(col-max (nnth i (nnth (nnth i pv) A)))
+	(col-max-i i))
+    (loop for j from i to n
+	  do (when (> (nnth i (nnth (nnth j pv) A)) col-max)
+		   (setf col-max (nnth i (nnth (nnth j pv) A)) col-max-i j)))
+    (values col-max-i)))
+    
+(defun max-in-column (A pv i)
+  "Given a matrix A, find j where jth row has the maximum in ith column."
+  (let ((n (length A))
+	(col-max (nnth 1 (nnth (nnth i pv) A)))
+	(col-max-i 1))
+    (loop for j from 1 to n
+	  do (when (> (nnth i (nnth (nnth j pv) A)) col-max)
+		   (setf col-max (nnth i (nnth (nnth j pv) A)) col-max-i j)))
+    (values col-max-i)))
+
+(defun el-swap (v i j)
+  (let ((tmp (nnth i v)))
+    (setf (nnth i v) (nnth j v))
+    (setf (nnth j v) tmp)))
+
+(defun gaussian-elim-pp (A b)
+  "Given a square matrix A and column vector b, solve Ax=b by Gaussian elimination with partial pivoting."
+  (let* ((n (length A))
+	 (pv (range n))
+	 (augmented-matrix (augment A b)))
+    (loop for i from 1 to n
+	  do (el-swap pv i (max-in-column-below A pv i))
+			  
+
+
+	  )))
+    
