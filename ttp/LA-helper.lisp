@@ -96,8 +96,20 @@
 	 (augmented-matrix (augment A b)))
     (loop for i from 1 to n
 	  do (el-swap pv i (max-in-column-below A pv i))
+	     (setq normed-ith-row (mapcar #'(lambda (x) (/ x (m-el A i i :pv pv)))
+					  (nnth (nnth pv i) A)))
+	     (loop for j from (1+ i) to n
+		   do (loop for k from j to n
+			    do (decf (nnth k (nnth (nnth j pv) A))
+				     
+		  
 			  
 
 
-	  )))
-    
+	  )
+    (values pv)))
+
+(defun m-pprint (A pv)
+  (let ((n (length A)))
+    (loop for i from 1 to n
+	  do (print (nnth (nnth i pv) A)))))
