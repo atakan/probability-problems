@@ -4,7 +4,7 @@
 ;;;;           (a21 a22 a23 a24)
 ;;;;           (a31 a32 a33 a34)
 ;;;;           (a41 a42 a43 a44))
-;;;; FIXME Matrices are typically accessed by (m-el A n m).
+;;;; Matrices are typically accessed by (m-el A row col).
 
 ;;; let's give this a name
 (defpackage :la-helper
@@ -21,6 +21,7 @@
 		    (4/37 4/41 4/47 4/53)))
 
 (defun qrm (&key (n 4) (max 1200))
+  "quasi-random-matrix"
   (loop for j from 1 to n
 	collect (loop for i from 1 to n
 		      collect (random max))))
@@ -32,25 +33,22 @@
   (nth (1- n) A))
 |#
 
-;; defined as macro to be able to setf
+;; defined as macros to be able to setf
 (defmacro nnth (n A)
+  "1-indexed nth"
   `(nth (1- ,n) ,A))
 
-;;; XXX fix (remove pv), macrofy and use this
-(defun m-el (A n m &key (pv (range (length A))))
-  "return the matrix element at (pv n)th row and mth colum. pv is the pivot matrix and shows the indirect index for rows. Everything is 1-indexed, i.e. A11 is the upper left element."
-  (nnth m (nnth (nnth n pv) A)))
+(defmacro m-el (A row col)
+  "return the matrix element at the given row and column.
+   Everything is 1-indexed. 
+   The matrix is a list of rows, which themselves are lists."
+  `(nnth ,col (nnth ,row ,A)))
 
 (defun augment (A b)
   "Augments a matrix A and (column) vector b"
   (loop for row in A
 	for i from 0 to (1- (length A))
 	collect (append row (list (nth i b)))))
-
-(defun m-pprint-pv (A pv)
-  (let ((n (length A)))
-    (loop for i from 1 to n
-	  do (print (nnth (nnth i pv) A)))))
 
 (defun m-pprint (A)
   (let ((n (length A)))
@@ -61,11 +59,11 @@
   "Given a matrix A, find j>=i where jth row has the maximum in ith column.
    This is what is needed for pivoting and this routine is slightly more efficient than the more general one given elsewhere."
   (let ((n (length A))
-	(col-max (nnth i (nnth i A)))
+	(col-max (m-el A i i))
 	(col-max-i i))
     (loop for j from i to n
-	  do (when (> (abs (nnth i (nnth j A))) (abs col-max))
-		   (setf col-max (nnth i (nnth j A)) col-max-i j)))
+	  do (when (> (abs (m-el A j i)) (abs col-max))
+		   (setf col-max (m-el A j i) col-max-i j)))
     (values col-max-i)))
 
 (defun swap-row (A r1 r2)
@@ -130,4 +128,4 @@
 		     (1/6 -5/6  1/6 1/6    0)
 		     ( -1  1/3    0   0    0)))
 
-(defparameter *Mb* '(1 1 1 1 1))
+(defparameter *Mb* '(-1 -1 -1 -1 -1))
