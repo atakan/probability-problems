@@ -6,6 +6,10 @@
 ;;;;           (a41 a42 a43 a44))
 ;;;; FIXME Matrices are typically accessed by (m-el A n m).
 
+;;; let's give this a name
+(defpackage :la-helper
+  (:use :common-lisp))
+
 ;;; the following parameters are defined for quicktesting
 (defun range (n)
   (loop for i from 1 to n
