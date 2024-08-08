@@ -122,6 +122,31 @@
 	     (kill-below-diag aug-mat col))
     (back-subst aug-mat)))
 
+(defun print-wvec (v)
+  "print a list in wolfram vector form"
+  (format t "{")
+  (loop for x in (butlast v)
+	do (format t "~a, " x))
+  (format t "~a}" (car (last v))))
+
+(defun print-wmat (m)
+  "print a list of lists in wolfram matrix form"
+  (format t "{")
+  (loop for v in (butlast m)
+	do (print-wvec v)
+	   (format t ", "))
+  (print-wvec (car (last m)))
+  (format t "}"))
+
+(defun print-for-wolfram (A b)
+  "print a command for mathematica/wolfram to solve linear system Ax=b.
+   e.g. LinearSolve[{{r, s}, {t, u}}, {y, z}]" 
+  (format t "LinearSolve[")
+  (print-wmat A)
+  (format t ", ")
+  (print-wvec b)
+  (format t "]~%"))
+
 (defparameter *MA* '((  0    0  1/3 1/3 -2/3)
 		     (  0  1/3  1/3  -1  1/3)
 		     (  0  1/6 -5/6 1/6  1/6)

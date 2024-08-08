@@ -1,46 +1,31 @@
 ;;; the plan/algorithm for ttp:
 ;;; Given a state (n, l, m), calculate the number of rings N=n+l+m. Find all its 3 integer partitions by (knuth-h N 3). For each of these partitions, find the possible results with probabilities, filter out/discard the results with empty towers; use the remaining results to setup the matrix. Note: the diagonal elements of the matrix are all -1 (unless a state can turn to itself, the constant terms are all 1. Solve this linear system and get your answer.
 
+(load "LA-helper.lisp")
+
 (defun average-length-ntp (state)
   "given a state blah blah (see above)
    I try to make this a bit more general, so ntp (n-tower problem)."
   (let* ((n-towers (length state))   
  	 (n-rings (apply #'+ state))
-	 (possible-states (knuth-h n-guards n-towers))
+	 (possible-states (knuth-h n-rings n-towers))
 	 (n-ps (length possible-states)) ; the dimension of our-A below
 	 (our-A nil)  ;this is A in Ax = b
 	 (our-b nil)) ;this is b in Ax = b
     (loop for st in possible-states
-	  do (let ((row (make-list n-ps :initial-element 0)))
-	       (setf (elt row (position st interesting-states)) -1)
+	  do (let ((row (make-list n-ps :initial-element 0))
+		   (b-val 0))
+	       (setf (elt row (position st possible-states)) -1)
 	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
-		     do (incf (elt row (position res interesting-states :test #'equal)) prob))
-	       (push row rows)))
-    (values rows)
+		     do (incf b-val prob)
+			(incf (elt row (position res possible-states :test #'equal)) prob))
+	       (push row our-A)
+	       (push (- b-val 1) our-b)))
+    (print-for-wolfram  (nreverse our-A) (nreverse our-b))
 	  ))
-
-(defparameter *init-cond* '(3 2 2))
-
-(defvar *changes* '((1/6) (-1 1 0)
-		    (1/6) (-1 0 1)))
-
-(defmacro 0nth (i l)
-  `(nth ,(1+ i) ,l))
 
 (defmacro a1 ()
   '(first a))
-
-#|
-(defun changes-tower-prob (n)
-  "create all possibilities with one +1, one -1 and rest 0s. Turn it into a list with probabilities and return.
-   this is essentially all permutations of (1 -1 0 ... 0).
-   we can do this by starting n-2 0s and inserting 1 and -1 in all possible slots."
-  (let ((my-zeroes (make-zeros-list n))
-	(zeros-with-ones nil))
-    (dotimes (i n zeros-with-ones)
-      ;;; instead of the following, I should check if the current element is 0 and only then subst and push. At least for the next step.
-      (push (substitute 1 0 my-zeroes :start i :count 1) zeros-with-ones))))
-|#    
 
 (defun changes-tower-prob (n)
   "create all possibilities with one +1, one -1 and rest 0s. Turn it into a list with probabilities and return.
