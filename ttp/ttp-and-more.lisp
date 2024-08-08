@@ -1,22 +1,22 @@
 ;;; the plan/algorithm for ttp:
-;;; Given a state (n, l, m), calculate the number of rings(?, guards?) N=n+l+m. Find all its 3 integer partitions by (knuth-h N 3). For each of these partitions, find the possible results with probabilities, filter out/discard the results with empty towers; use the remaining results to setup the matrix. Note: the diagonal elements of the matrix are all -1, the constant terms are all 1. Solve this linear system and get your answer.
+;;; Given a state (n, l, m), calculate the number of rings N=n+l+m. Find all its 3 integer partitions by (knuth-h N 3). For each of these partitions, find the possible results with probabilities, filter out/discard the results with empty towers; use the remaining results to setup the matrix. Note: the diagonal elements of the matrix are all -1 (unless a state can turn to itself, the constant terms are all 1. Solve this linear system and get your answer.
 
 (defun average-length-ntp (state)
   "given a state blah blah (see above)
    I try to make this a bit more general, so ntp (n-tower problem)."
   (let* ((n-towers (length state))   
- 	 (n-guards (apply #'+ state))
-	 (interesting-states (knuth-h n-guards n-towers))
-	 (row-length (1+ (length interesting-states)))
-	 (rows nil))
-    (loop for st in interesting-states
-	  do (let ((row (make-list row-length :initial-element 0)))
-	       (setf (car (last row)) 1) ; this already produces augmented matrix
+ 	 (n-rings (apply #'+ state))
+	 (possible-states (knuth-h n-guards n-towers))
+	 (n-ps (length possible-states)) ; the dimension of our-A below
+	 (our-A nil)  ;this is A in Ax = b
+	 (our-b nil)) ;this is b in Ax = b
+    (loop for st in possible-states
+	  do (let ((row (make-list n-ps :initial-element 0)))
 	       (setf (elt row (position st interesting-states)) -1)
 	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
 		     do (incf (elt row (position res interesting-states :test #'equal)) prob))
 	       (push row rows)))
-    (gauss-jordan-elimination-augmented rows)
+    (values rows)
 	  ))
 
 (defparameter *init-cond* '(3 2 2))
@@ -82,7 +82,7 @@
 ;;;;;;
 
 (defun knuth-H (n m)
-  "Knuth's algorithm TAOCP v4a, p392, for partitions of n into m parts."
+  "Knuth's algorithm  for partitions of n into m parts (TAOCP v4a, p392)."
   (if (or (< m 2) (< n m))
       (return-from knuth-H (format t "for partitions, we need n >= m>= 2")))
   (let ((result nil)
@@ -120,6 +120,13 @@
        (go H2)
      END-H)
     (return-from knuth-H (nreverse result))))
+
+(defun pprint-partitions (P)
+  "pretty print partitions with q_i =..."
+  (let ((i 1))
+    (loop for w in P
+	  do (format t "q_~a=(~{~a~^, ~}),~%" i w)
+	     (incf i))))
 	       	   
 (defun permutations (list)
   "Return a list of all permutations of the input list.
