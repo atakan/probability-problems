@@ -14,15 +14,23 @@
 	 (our-b nil)) ;this is b in Ax = b
     (loop for st in possible-states
 	  do (let ((row (make-list n-ps :initial-element 0))
-		   (b-val 0))
-	       (setf (elt row (position st possible-states)) -1)
+		   (b-val 1))
+	       (setf (elt row (position st possible-states)) 1)
 	       (loop for (prob res) in (results-from-change st #'changes-tower-prob)
-		     do (incf b-val prob)
-			(incf (elt row (position res possible-states :test #'equal)) prob))
+		     do (decf (elt row (position res possible-states :test #'equal)) prob))
 	       (push row our-A)
-	       (push (- b-val 1) our-b)))
-    (print-for-wolfram  (nreverse our-A) (nreverse our-b))
-	  ))
+	       (push b-val our-b)))
+;;;    (format t "~a~%~a~%" (nreverse our-A) (nreverse our-b))
+;;;    (print-for-wolfram  (nreverse our-A) (nreverse our-b))
+    (elt (gauss-elim-pp (nreverse our-A) (nreverse our-b))
+	 (position state possible-states :test #'equal))
+    ))
+
+(defun average-length-3tp-analytic (state)
+  "3abc/(a+b+c)
+   The American Mathematical Monthly, Vol. 100, No. 1 (Jan., 1993), pp. 62-64"
+  (/ (apply #'* 3 state) (apply #'+ state)))
+
 
 (defmacro a1 ()
   '(first a))
