@@ -31,6 +31,14 @@
    The American Mathematical Monthly, Vol. 100, No. 1 (Jan., 1993), pp. 62-64"
   (/ (apply #'* 3 state) (apply #'+ state)))
 
+(defun average-length-4tp-engel-guess (state)
+  "6abcd/(ab+ac+ad+bc+bd+cd)
+   The American Mathematical Monthly, Vol. 100, No. 1 (Jan., 1993), pp. 62-64"
+  (let ((a (first state)) (b (second state))
+	(c (third state)) (d (fourth state)))
+    (/ (apply #'* 6 state)
+       (+ (* a b) (* a c) (* a d) (* b c) (* b d) (* c d)))))
+			      
 
 (defmacro a1 ()
   '(first a))
