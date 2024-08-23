@@ -1,6 +1,8 @@
 ;;; the plan/algorithm for ttp:
 ;;; Given a state (n, l, m), calculate the number of rings N=n+l+m. Find all its 3 integer partitions by (knuth-h N 3). For each of these partitions, find the possible results with probabilities, filter out/discard the results with empty towers; use the remaining results to setup the matrix. Note: the diagonal elements of the matrix are all -1 (unless a state can turn to itself, the constant terms are all 1. Solve this linear system and get your answer.
 
+;;; Modify the probabilities, such that the donor tower is chosen in proportion to number of rings on it, whereas the receiving tower is still chosen randomly. Further modify this so that the receiving tower is choses proportional or inversely proportional to number of rings on it.
+
 (load "LA-helper.lisp")
 
 (defun average-length-ntp (state)
