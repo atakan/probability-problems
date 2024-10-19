@@ -3,6 +3,8 @@
 
 ;;(load "LA-helper.lisp")
 
+;;; TODO: Modify the probabilities, such that the donor tower is chosen in proportion to number of rings on it, whereas the receiving tower is still chosen randomly. Further modify this so that the receiving tower is chosen proportional or inversely proportional to number of rings on it.
+
 (defun average-length-ntp (state)
   "given a state blah blah (see above)
    I try to make this a bit more general, so ntp (n-tower problem)."
